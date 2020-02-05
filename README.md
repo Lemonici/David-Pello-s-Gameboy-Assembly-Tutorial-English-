@@ -1,4 +1,4 @@
-# Gameboy Assembly Tutorial
+# Game Boy Assembly Tutorial
 
 ---
 
@@ -6,7 +6,7 @@
 An improved English translation of David Pello's GBZ80 tutorial found [here](http://wiki.ladecadence.net/doku.php?id=tutorial_de_ensamblador) and the original translation [here](https://gb-archive.github.io/salvage/tutorial_de_ensamblador/tutorial_de_ensamblador%20%5BLa%20decadence%5D.html)
 
 
-While trying to learn assembly for the Gameboy I came accross this tutorial. Unfortunately, the translation was abysmal, making it pretty hard to follow. I wanted to contribute to the community and my Spanish skills are considerably better than my programming knowledge (Advanced-Mid on the ACTFL, mom is very proud). I figured it may be of use to provide a better translation for those of you who don't consider 2 years of foreign language experience a reasonable requirement for learning an unrelated programming language.
+While trying to learn assembly for the Game Boy I came accross this tutorial. Unfortunately, the translation was abysmal, making it pretty hard to follow. I wanted to contribute to the community and my Spanish skills are considerably better than my programming knowledge (Advanced-Mid on the ACTFL, mom is very proud). I figured it may be of use to provide a better translation for those of you who don't consider 2 years of foreign language experience a reasonable requirement for learning an unrelated programming language.
 
 As a result of my Spanish skills being better than my programming skills, I was unable to preserve the syntax hilighting found in the original document. I also don't have a perfect grasp of the technical vocabulary in English, so please let me know if there are any errors.
 
@@ -47,9 +47,9 @@ Any future comments not in the original document will be in [square brackets].
             |________...______,"     
 
 ```
-### Nintendo Gameboy (DMG)
+### Nintendo Game Boy (DMG)
 
-To start this Gameboy development tutorial, we'll briefly review the technical specifications of our wonderful console:
+To start this Game Boy development tutorial, we'll briefly review the technical specifications of our wonderful console:
 
 + CPU: 8-bit SHARP LR35902 (similar to the Z80) running at 4.19 MHz
 + 8KiB Internal RAM
@@ -59,9 +59,9 @@ To start this Gameboy development tutorial, we'll briefly review the technical s
 + 6V, 0.7A
 + 90mm x 148mm x 32mm
 
-Alright, so in the heart of the Gameboy we have a CPU manufactured by Sharp specifically for Nintendo, we have a microprocessor halfway between the 8080 and the Z80, since even though it doesn't have the extra sets of registers or the indexes of the Z80, it does have most of it's extended instruction set, like those used in bit manipulation. It also includes additional circuitry to control the display, the joypad, the serial port, and for audio generation.
+Alright, so in the heart of the Game Boy we have a CPU manufactured by Sharp specifically for Nintendo, we have a microprocessor halfway between the 8080 and the Z80, since even though it doesn't have the extra sets of registers or the indexes of the Z80, it does have most of it's extended instruction set, like those used in bit manipulation. It also includes additional circuitry to control the display, the joypad, the serial port, and for audio generation.
 
-This tutorial doesn't claim to be a complete programming tutorial for the Z80 (or, in this case, the GBz80 as it's often called), but instead focuses on the Gameboy hardware and how to use it. To learn Z80 assembly I recommend existing documentation like the complete instruction set for the Gameboy CPU at http://gbdev.gg8.se/wiki/articles/CPU_Instruction_Set and the Z80 assembly course for the Spectrum at https://wiki.speccy.org/cursos/ensamblador/indice [This link is in Spanish]. Remember that the Z80 has a few instructions that the Gameboy CPU doesn't have, but as for the rest of them learning Z80 assembly will be perfect for the Gameboy (as well as the Spectrum, Amstrad CPC, MSX, Sega Master System...).
+This tutorial doesn't claim to be a complete programming tutorial for the Z80 (or, in this case, the GBz80 as it's often called), but instead focuses on the Game Boy hardware and how to use it. To learn Z80 assembly I recommend existing documentation like the complete instruction set for the Game Boy CPU at http://gbdev.gg8.se/wiki/articles/CPU_Instruction_Set and the Z80 assembly course for the Spectrum at https://wiki.speccy.org/cursos/ensamblador/indice [This link is in Spanish]. Remember that the Z80 has a few instructions that the Game Boy CPU doesn't have, but as for the rest of them learning Z80 assembly will be perfect for the Game Boy (as well as the Spectrum, Amstrad CPC, MSX, Sega Master System...).
 
 ### GBz80
 The CPU, which we will call the GBz80, is an 8-bit CPU with a 16-bit address bus. In other words, the internal data and extermal memory are organized in bytes and can address 2^16 = 64KiB of external memory.
@@ -91,7 +91,7 @@ This bit is set to 1 when a summation's result is greater than $FF (8-bit) or $F
 Some of these registers can be combined to form 16-bit registers. They're very useful for managing memory addresses or larger numbers if we need them. The 16-bit registers are `af`, `bc`, `de`, `hl`.
 
 #### Memory Map
-The Gameboy's primary memory is mapped in a 16-bit space and allows us to directly address 64KiB (2^16 = 65536) locations. In this address space we need to assign addresses to all the memory blocks that the Gameboy needs to access. This includes the RAM, the cartridge ROM, the cartridge's internal RAM for games that save, video memory, etc. To this end, the Gameboy's designers mapped the memory to different necessary blocks like internal RAM or video memory, leaving two 16KiB blocks for accessing a game's ROM, and 8KiB to access a game's RAM (savegames). Since a lot of games needed more than 32KiB of ROM or 8KiB of save RAM, programmers started using a technique called 'Banking' in which the game's ROM is divided in different blocks that can be made independent (the graphics or sounds of different screens, for example), that are mapped in the memory access block as necessary. In the Gameboy, this was designed as follows; we have one static 16KiB block (where we program the main game logic) and then, through specific instructions (depending on the mapping chip we use in our cartridge) we can swap out different 16KiB banks in the open block. It seems complicated, but we'll talk about banking later on. This is all seen in the following memory map with all the available blocks in the address space of the Gameboy.
+The Game Boy's primary memory is mapped in a 16-bit space and allows us to directly address 64KiB (2^16 = 65536) locations. In this address space we need to assign addresses to all the memory blocks that the Game Boy needs to access. This includes the RAM, the cartridge ROM, the cartridge's internal RAM for games that save, video memory, etc. To this end, the Game Boy's designers mapped the memory to different necessary blocks like internal RAM or video memory, leaving two 16KiB blocks for accessing a game's ROM, and 8KiB to access a game's RAM (savegames). Since a lot of games needed more than 32KiB of ROM or 8KiB of save RAM, programmers started using a technique called 'Banking' in which the game's ROM is divided in different blocks that can be made independent (the graphics or sounds of different screens, for example), that are mapped in the memory access block as necessary. In the Game Boy, this was designed as follows; we have one static 16KiB block (where we program the main game logic) and then, through specific instructions (depending on the mapping chip we use in our cartridge) we can swap out different 16KiB banks in the open block. It seems complicated, but we'll talk about banking later on. This is all seen in the following memory map with all the available blocks in the address space of the Game Boy.
 ```
  General memory map*                       Bank writing registers
  -------------------                       ----------------------
@@ -125,8 +125,8 @@ The Gameboy's primary memory is mapped in a 16-bit space and allows us to direct
 
 \* **NOTE:** Following the conventions of RGBDS, the assembler we're using in this tutorial, I'm writing the numbers in hexadecimal notation with a leading '$', the ones in binary with a leading '%', and decimals without a prefix
 
-#### Gameboy Rom Organization
-Gameboy ROMs need to have a certain structure for the Gameboy to accept them, especially when talking about the header. Below I describe in detail the parts of a ROM and their functions:
+#### Game Boy Rom Organization
+Game Boy ROMs need to have a certain structure for the Game Boy to accept them, especially when talking about the header. Below I describe in detail the parts of a ROM and their functions:
 ```
 GAMEBOY IMAGE DIAGRAM
 ---------------------
@@ -137,24 +137,24 @@ $0    -  $100:	Interrupt vectors, but these addresses can also be used for
 $100  -  $103:	Entry point for executing the program, it's common practice to put
 		a 'nop' follow by a jump to our entry point.
 				
-$104  - $14E:	Cabecera del cartucho. Contiene el logo de nintendo, (104h-133h)
-		que es comparado con el existente en la rom justo al arranque de
-		la consola, si no coiciden, se detiene la ejecución.
+$104  - $14E:	Cartridge header. Contains the Nintendo logo ($104-$133)
+		which is compared with the existing one when the console boots.
+		If they aren't the same, the program stops executing
 		
-		Luego tenemos los siguientes datos:
+		After that we have the following data:
 		
-		$134 - Nombre del cartucho - 15bytes
+		$134 - Cartridge Name - 15 bytes
 		
-		$143 - Soporte de gameboy color
-			$80 = GBColor, $00 u otro = B/N
+		$143 - Game Boy Color Support
+			$80 = Game Boy Color, $00 or otherwise = B/W
 					
-		$144 - Codigo de licencia, 2 bytes (no importante)
+		$144 - Licensee Code, 2 bytes (unimportant)
 		
-		$146 - Soporte de supergameboy (SGB)
-			00 = GameBoy, 03 = Super GameBoy
+		$146 - Super Game Boy Support (SGB)
+			$00 = Game Boy, $03 = Super Game Boy
 					
-		$147 - Tipo de cartucho (Sólo ROM, MBC1, MBC1+RAM.. etc)
-			 0 - SOLO ROM                12 - ROM+MBC3+RAM
+		$147 - Cartridge Type (ROM only, MBC1, MBC1+RAM.. etc)
+			 0 - ROM ONLY                12 - ROM+MBC3+RAM
 			 1 - ROM+MBC1                13 - ROM+MBC3+RAM+BATT
 			 2 - ROM+MBC1+RAM            19 - ROM+MBC5
 			 3 - ROM+MBC1+RAM+BATT       1A - ROM+MBC5+RAM
@@ -169,7 +169,7 @@ $104  - $14E:	Cabecera del cartucho. Contiene el logo de nintendo, (104h-133h)
 			10 - ROM+MBC3+TIMER+RAM+BATT
 			11 - ROM+MBC3
 			
-		$148 - Tamaño ROM 
+		$148 - ROM Size 
 			  0 - 256Kbit =  32KByte =   2 bancos
 		  	  1 - 512Kbit =  64KByte =   4 bancos
 		   	  2 -   1Mbit = 128KByte =   8 bancos
@@ -182,31 +182,86 @@ $104  - $14E:	Cabecera del cartucho. Contiene el logo de nintendo, (104h-133h)
 			$53 -  10Mbit = 1.2MByte =  80 bancos
 			$54 -  12Mbit = 1.5MByte =  96 bancos
 			
-		$149 - Tamaño RAM
-			0 - Ninguna
-			1 -  16kBit =   2kB =  1 banco
-			2 -  64kBit =   8kB =  1 banco
-			3 - 256kBit =  32kB =  4 bancos
-			4 -   1MBit = 128kB = 16 bancos
+		$149 - RAM Size
+			0 - None
+			1 -  16kBit =   2kB =  1 bank
+			2 -  64kBit =   8kB =  1 bank
+			3 - 256kBit =  32kB =  4 banks
+			4 -   1MBit = 128kB = 16 banks
 			
-		$14A - Código de zona 
-			0 - Japonés
-			1 - No Japonés
+		$14A - Destination Code
+			0 - Japanese
+			1 - Non-Japanese
 			
-		$14B - Codigo de licencia antiguo, 2 bytes 
-			$33 - Buscar el ćodigo en $0144/$0145
-			(Las funciones de SGB no funcionan si no es $33)
+		$14B - Old Licensee Code, 2 bytes 
+			$33 - Look for code in $0144/$0145
+			(SGB functions don't work unless this is set to $33)
 		
-		$14C - Versión de ROM (Normalmente $00)
+		$14C - Mask ROM Version (Normally $00)
 		
-		$14D - Prueba de complemento (importante)
+		$14D - Header Checksum (important)
 		
-		$14E - Checksum (no importante)
+		$14E - Golbal Checksum (not important)
 
-$14F  - $3FFF:	Nuestro código. Este es el banco 0 de 16K, y es fijo.
+$14F  - $3FFF:	Our code. This is the 16KiB bank 0, and is fixed.
 
-$4000 - $7FFF:	Segundo banco de 16K. En el arranque de la gameboy este se
-		corresponde con el banco 1 (hasta 32K de la rom), pero podría 
-		ser intercambiado por bancos superiores de 16K hasta el total
-		de ROM que tengamos disponible usando un mapper como el MBC1.
+$4000 - $7FFF:	The second 16KiB bank. When the Game Boy boots this
+		corresponds with bank 1 (And goes to 32KiB of the ROM), but it
+		can be swapped for banks 2+ (each with 16KiB) up to the last
+		available bank using a mapper like the MBC1
 ```
+
+#### Video System
+The Game Boy's video system doesn't access individual pixels like a PC does. Instead, it's a system of blocks or "tiles". It consists of 256 x 256 pixel buffer (32 x 32 tiles) of which 160 x 144 can be shown at a given time (making the screen size 20 x 18 tiles). We have a pair of registers, `SCROLLX` and `SCROLLY` that allow us to move the visible area around the buffer. The buffer is also 'circular'; when the visible area scrolls past the edge of the buffer it wraps around and shows data from the opposite side.
+
+```
+				  ^
+				  |
+				  v
+
+		+------------------------------------+
+		|(scrollx, scrolly)                  |
+		|   +----------------+               |
+		|   |                |               |
+		|   |                |               |
+		|   |                |               |
+		|   |     20x18      |               |
+		|   |  visible area  |               |
+		|   |                |               |
+		|   |                |               |
+	<->	|   |                |               |	<->
+		|   +----------------+               |
+		|                                    |
+		|                32x32               |
+		|           background map           |
+		|                                    |
+		|                                    |
+		|                                    |
+		|                                    |
+		|                                    |
+		+------------------------------------+		
+				  ^
+				  |
+				  v
+```
+
+The registers that control the video system are very important since they allow us to control what and how the screen displays. The most important ones are:
+
+##### $FF40 - LCDC - LCD Control (R/W)
+This control register allows us to adjust the Game Boy's screen and should be used to manage any operation that involves displaying something with it.
+
+Every bit in this register has a special significance, as explained below
+```
+ Bit 7 - Display Control				(0=Off, 1=On)
+ Bit 6 - Window Tile Map Selection			(0=9800-9BFF, 1=9C00-9FFF)
+ Bit 5 - Window Control					(0=Off, 1=On)
+ Bit 4 - Background and Window Tile Data Selection	(0=8800-97FF, 1=8000-8FFF)
+ Bit 3 - Background Tile Map selection			(0=9800-9BFF, 1=9C00-9FFF)
+ Bit 2 - OBJ (Sprite) Sizes				(0=8x8, 1=8x16)
+ Bit 1 - OBJ (Sprite) Control				(0=Off, 1=On)
+ Bit 0 - Background Control				(0=Off, 1=On)
+```
+
+Now we'll explain the functions of some of the bits because they're so important:
+
+###### Bit 7 - Display Control
