@@ -53,10 +53,10 @@ To start this Gameboy development tutorial, we'll briefly review the technical s
 + CPU: 8-bit SHARP LR35902 (similar to the Z80) running at 4.19 MHz
 + 8KiB Internal RAM
 + 8KiB Video RAM
-+ 2.6" LCD display, 160 $\times$ 144
++ 2.6" LCD display, 160 \times 144
 + Stereo sound, 4 channels
 + 6V, 0.7A
-+ 90mm $\times$ 148mm $\times$ 32mm
++ 90mm \times 148mm \times 32mm
 
 Alright, so in the heart of the Gameboy we have a CPU manufactured by Sharp specifically for Nintendo, we have a microprocessor halfway between the 8080 and the Z80, since even though it doesn't have the extra sets of registers or the indexes of the Z80, it does have most of it's extended instruction set, like those used in bit manipulation. It also includes additional circuitry to control the display, the joypad, the serial port, and for audio generation.
 
