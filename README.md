@@ -124,3 +124,89 @@ The Gameboy's primary memory is mapped in a 16-bit space and allows us to direct
 \* **NOTE:** b = bit, B = byte
 
 \* **NOTE:** Following the conventions of RGBDS, the assembler we're using in this tutorial, I'm writing the numbers in hexadecimal notation with a leading '$', the ones in binary with a leading '%', and decimals without a prefix
+
+#### Gameboy Rom Organization
+Gameboy ROMs need to have a certain structure for the Gameboy to accept them, especially when talking about the header. Below I describe in detail the parts of a ROM and their functions:
+```
+GAMEBOY IMAGE DIAGRAM
+---------------------
+
+$0    -  $100:	Interrupt vectors, but these addresses can also be used for
+		inserting our own code
+				
+$100  -  $103:	Entry point for executing the program, it's common practice to put
+		a 'nop' follow by a jump to our entry point.
+				
+$104  - $14E:	Cabecera del cartucho. Contiene el logo de nintendo, (104h-133h)
+		que es comparado con el existente en la rom justo al arranque de
+		la consola, si no coiciden, se detiene la ejecución.
+		
+		Luego tenemos los siguientes datos:
+		
+		$134 - Nombre del cartucho - 15bytes
+		
+		$143 - Soporte de gameboy color
+			$80 = GBColor, $00 u otro = B/N
+					
+		$144 - Codigo de licencia, 2 bytes (no importante)
+		
+		$146 - Soporte de supergameboy (SGB)
+			00 = GameBoy, 03 = Super GameBoy
+					
+		$147 - Tipo de cartucho (Sólo ROM, MBC1, MBC1+RAM.. etc)
+			 0 - SOLO ROM                12 - ROM+MBC3+RAM
+			 1 - ROM+MBC1                13 - ROM+MBC3+RAM+BATT
+			 2 - ROM+MBC1+RAM            19 - ROM+MBC5
+			 3 - ROM+MBC1+RAM+BATT       1A - ROM+MBC5+RAM
+			 5 - ROM+MBC                 1B - ROM+MBC5+RAM+BATT
+			 6 - ROM+MBC2+BATT           1C - ROM+MBC5+RUMBLE
+			 8 - ROM+RAM                 1D - ROM+MBC5+RUMBLE+SRAM
+			 9 - ROM+RAM+BATT            1E - ROM+MBC5+RUMBLE+SRAM+BATT
+			 B - ROM+MMM01               1F - GBCamera
+			 C - ROM+MMM01+SRAM          FD - Bandai TAMA5
+			 D - ROM+MMM01+SRAM+BATT     FE - Hudson HuC-3
+		 	 F - ROM+MBC3+TIMER+BATT     FF - Hudson HuC-1
+			10 - ROM+MBC3+TIMER+RAM+BATT
+			11 - ROM+MBC3
+			
+		$148 - Tamaño ROM 
+			  0 - 256Kbit =  32KByte =   2 bancos
+		  	  1 - 512Kbit =  64KByte =   4 bancos
+		   	  2 -   1Mbit = 128KByte =   8 bancos
+		  	  3 -   2Mbit = 256KByte =  16 bancos
+		  	  4 -   4Mbit = 512KByte =  32 bancos
+		  	  5 -   8Mbit =   1MByte =  64 bancos
+		  	  6 -  16Mbit =   2MByte = 128 bancos
+                          7 -  32Mbit =   4MByte = 256 bancos
+			$52 -   9Mbit = 1.1MByte =  72 bancos
+			$53 -  10Mbit = 1.2MByte =  80 bancos
+			$54 -  12Mbit = 1.5MByte =  96 bancos
+			
+		$149 - Tamaño RAM
+			0 - Ninguna
+			1 -  16kBit =   2kB =  1 banco
+			2 -  64kBit =   8kB =  1 banco
+			3 - 256kBit =  32kB =  4 bancos
+			4 -   1MBit = 128kB = 16 bancos
+			
+		$14A - Código de zona 
+			0 - Japonés
+			1 - No Japonés
+			
+		$14B - Codigo de licencia antiguo, 2 bytes 
+			$33 - Buscar el ćodigo en $0144/$0145
+			(Las funciones de SGB no funcionan si no es $33)
+		
+		$14C - Versión de ROM (Normalmente $00)
+		
+		$14D - Prueba de complemento (importante)
+		
+		$14E - Checksum (no importante)
+
+$14F  - $3FFF:	Nuestro código. Este es el banco 0 de 16K, y es fijo.
+
+$4000 - $7FFF:	Segundo banco de 16K. En el arranque de la gameboy este se
+		corresponde con el banco 1 (hasta 32K de la rom), pero podría 
+		ser intercambiado por bancos superiores de 16K hasta el total
+		de ROM que tengamos disponible usando un mapper como el MBC1.
+```
