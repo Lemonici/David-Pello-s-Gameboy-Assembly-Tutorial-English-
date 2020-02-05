@@ -93,8 +93,7 @@ Some of these registers can be combined to form 16-bit registers. They're very u
 #### Memory Map
 The Gameboy's primary memory is mapped in a 16-bit space and allows us to directly address 64KiB (2^16 = 65536) locations. In this address space we need to assign addresses to all the memory blocks that the Gameboy needs to access. This includes the RAM, the cartridge ROM, the cartridge's internal RAM for games that save, video memory, etc. To this end, the Gameboy's designers mapped the memory to different necessary blocks like internal RAM or video memory, leaving two 16KiB blocks for accessing a game's ROM, and 8KiB to access a game's RAM (savegames). Since a lot of games needed more than 32KiB of ROM or 8KiB of save RAM, programmers started using a technique called 'Banking' in which the game's ROM is divided in different blocks that can be made independent (the graphics or sounds of different screens, for example), that are mapped in the memory access block as necessary. In the Gameboy, this was designed as follows; we have one static 16KiB block (where we program the main game logic) and then, through specific instructions (depending on the mapping chip we use in our cartridge) we can swap out different 16KiB banks in the open block. It seems complicated, but we'll talk about banking later on. This is all seen in the following memory map with all the available blocks in the address space of the Gameboy.
 ```
- General memory map*                       Bank writing registers [I'm not sure about this one
- 									I had a hard time finding an English equivalent]
+ General memory map*                       Bank writing registers
  -------------------                       ----------------------
 
   Interrupt activation registers
@@ -123,4 +122,5 @@ The Gameboy's primary memory is mapped in a 16-bit space and allows us to direct
  ---------------------------------- $0000 ------------------------------------
 ```
 \* **NOTE:** b = bit, B = byte
+
 \* **NOTE:** Following the conventions of RGBDS, the assembler we're using in this tutorial, I'm writing the numbers in hexadecimal notation with a leading '$', the ones in binary with a leading '%', and decimals without a prefix
