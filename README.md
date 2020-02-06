@@ -318,10 +318,10 @@ We load `a` with the value of the `LY` register and compare it with 145, if they
 So for example, so you can see a bit of Game Boy assembly, if we want to wait until we're in VBlank (so we can activate or deactive the LCD for example, like we saw before), we could do something like this:
 
 ```asm
-espera_vblank:
+.vblank_wait:
 	ld	a, [$FF44]
 	cp	145
-	jr	nz, .espera_vblank
+	jr	nz, .vblank_wait
 ```
 
 Just like before, but after the comparison, if the result isn't 0 (and the LCD isn't on line 145), we jump to the starting label and make the comparison again. This loop will execute until the LCD reaches line 145, after which it will move on to the instructions that follow it. Don't worry about assembly, it'll be explained later on.
