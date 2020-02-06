@@ -96,21 +96,21 @@ The Game Boy's primary memory is mapped in a 16-bit space and allows us to direc
  General memory map*                       Bank writing registers
  -------------------                       ----------------------
 
-  Interrupt activation registers
+  Interrupts Enable Register (IE)
  ---------------------------------- $FFFF
-  High internal RAM (HRAM)
+  High RAM (HRAM)
  ---------------------------------- $FF80
   Unusable
  ---------------------------------- $FF4C
-  I/O ports
+  I/O Registers
  ---------------------------------- $FF00
   Unusable
  ---------------------------------- $FEA0
-  Sprite attributes (OAM)
+  Sprite attribute table (OAM)
  ---------------------------------- $FE00
-  Echo RAM 
+  Mirror of C000-DDFF (ECHO RAM)
  ---------------------------------- $E000
-  8kB internal RAM (WRAM)
+  8kB Work RAM (WRAM)
  ---------------------------------- $C000       ------------------------------
   8kB swappable RAM bank (SRAM)                /      MBC1 ROM/RAM selector
  ---------------------------------- $A000     /  -----------------------------
@@ -252,16 +252,42 @@ This control register allows us to adjust the Game Boy's screen and should be us
 
 Every bit in this register has a special significance, as explained below
 ```
- Bit 7 - Display Control				(0=Off, 1=On)
- Bit 6 - Window Tile Map Selection			(0=9800-9BFF, 1=9C00-9FFF)
- Bit 5 - Window Control					(0=Off, 1=On)
- Bit 4 - Background and Window Tile Data Selection	(0=8800-97FF, 1=8000-8FFF)
- Bit 3 - Background Tile Map selection			(0=9800-9BFF, 1=9C00-9FFF)
- Bit 2 - OBJ (Sprite) Sizes				(0=8x8, 1=8x16)
- Bit 1 - OBJ (Sprite) Control				(0=Off, 1=On)
- Bit 0 - Background Control				(0=Off, 1=On)
+ Bit 7 - LCD Display Enable             (0=Off, 1=On)
+ Bit 6 - Window Tile Map Display Select (0=9800-9BFF, 1=9C00-9FFF)
+ Bit 5 - Window Display Enable          (0=Off, 1=On)
+ Bit 4 - BG & Window Tile Data Select   (0=8800-97FF, 1=8000-8FFF)
+ Bit 3 - BG Tile Map Display Select     (0=9800-9BFF, 1=9C00-9FFF)
+ Bit 2 - OBJ (Sprite) Size              (0=8x8, 1=8x16)
+ Bit 1 - OBJ (Sprite) Display Enable    (0=Off, 1=On)
+ Bit 0 - BG/Window Display/Priority     (0=Off, 1=On)
 ```
 
 Now we'll explain the functions of some of the bits because they're so important:
 
 ###### Bit 7 - Display Control
+Activates and deactivates the LCD. The display has to be activated before we can use it to display something, and sometimes we want to deactivate it if we need to write a lot of data to the screen, like a presentation image or end screen, so that there's time to put all the graphics in before the screen starts to draw them and we see half-completed graphics and other oddities.
+
+###### ATTENTION
+The display can only be activated and deactivated when we're in the vertical interval period (VBlank). Activating or deactivating it outside of this period can damage the hardware. Be extremely careful with this since nothing will happen in an emulator but you can ruin your Game Boy if you do it with real hardware. So to activate or deactivate the LCD, always wait for the vertical interval (we'll see how to do that later).
+
+###### Bit 0 - Background Control
+If this bit is 0 the background isn't drawn, it stays blank (so to draw the background we have to set this bit to 1, obviously). We've seen this in many games for flickering effects and the like.
+
+The rest of the bits act similarly and I think they're adequately explained in the table.
+
+##### $FF41 - Status - LCD (R/W) Status
+This register is also very important, since it allows us to know what the LCD is doing in a given moment. We need to check it for a number of operations, so pay attention. It also allows us to activate the LCD interrutps so, as you can see, we have a lot of functionality in this register.
+
+An explanatory table and then we'll go over it in more detail:
+```
+ Bit 6 - LYC=LY Coincidence Interrupt (1=Enable) (Read/Write)
+ Bit 5 - Mode 2 OAM Interrupt         (1=Enable) (Read/Write)
+ Bit 4 - Mode 1 V-Blank Interrupt     (1=Enable) (Read/Write)
+ Bit 3 - Mode 0 H-Blank Interrupt     (1=Enable) (Read/Write)
+ Bit 2 - Coincidence Flag  (0:LYC<>LY, 1:LYC=LY) (Read Only)
+ Bit 1-0 - Mode Flag       (Mode 0-3, see below) (Read Only)
+           0: During H-Blank
+           1: During V-Blank
+           2: During Searching OAM
+           3: During Transferring Data to LCD Driver
+```
