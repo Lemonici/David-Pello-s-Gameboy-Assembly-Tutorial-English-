@@ -6,9 +6,9 @@
 An improved English translation of David Pello's GBZ80 tutorial found [here](http://wiki.ladecadence.net/doku.php?id=tutorial_de_ensamblador) and the original translation [here](https://gb-archive.github.io/salvage/tutorial_de_ensamblador/tutorial_de_ensamblador%20%5BLa%20decadence%5D.html)
 
 
-While trying to learn assembly for the Game Boy I came accross this tutorial. Unfortunately, the translation was abysmal, making it pretty hard to follow. I wanted to contribute to the community and my Spanish skills are considerably better than my programming knowledge (Advanced-Mid on the ACTFL, mom is very proud). I figured it may be of use to provide a better translation for those of you who don't consider 2 years of foreign language experience a reasonable requirement for learning an unrelated programming language.
+While trying to learn assembly for the Game Boy I came across this tutorial. Unfortunately, the translation was abysmal, making it pretty hard to follow. I wanted to contribute to the community and my Spanish skills are considerably better than my programming knowledge (Advanced-Mid on the ACTFL, mom is very proud). I figured it may be of use to provide a better translation for those of you who don't consider 2 years of foreign language experience a reasonable requirement for learning an unrelated programming language.
 
-As a result of my Spanish skills being better than my programming skills, I was unable to preserve the syntax hilighting found in the original document. I also don't have a perfect grasp of the technical vocabulary in English, so please let me know if there are any errors.
+As a result of my Spanish skills being better than my programming skills, I don't have a perfect grasp of the technical vocabulary in English, so please let me know if there are any errors.
 
 Any future comments not in the original document will be in [square brackets].
 
@@ -64,13 +64,13 @@ Alright, so in the heart of the Game Boy we have a CPU manufactured by Sharp spe
 This tutorial doesn't claim to be a complete programming tutorial for the Z80 (or, in this case, the GBz80 as it's often called), but instead focuses on the Game Boy hardware and how to use it. To learn Z80 assembly I recommend existing documentation like the complete instruction set for the Game Boy CPU at http://gbdev.gg8.se/wiki/articles/CPU_Instruction_Set and the Z80 assembly course for the Spectrum at https://wiki.speccy.org/cursos/ensamblador/indice [This link is in Spanish]. Remember that the Z80 has a few instructions that the Game Boy CPU doesn't have, but as for the rest of them learning Z80 assembly will be perfect for the Game Boy (as well as the Spectrum, Amstrad CPC, MSX, Sega Master System...).
 
 ### GBz80
-The CPU, which we will call the GBz80, is an 8-bit CPU with a 16-bit address bus. In other words, the internal data and extermal memory are organized in bytes and can address 2^16 = 64KiB of external memory.
+The CPU, which we will call the GBz80, is an 8-bit CPU with a 16-bit address bus. In other words, the internal data and external memory are organized in bytes and can address 2^16 = 64KiB of external memory.
 
 #### Registers
 The GBz80 has several internal registers where we can store data while we manipulate and move them to and from the external memory to the CPU. These 8-bit registers are `a`, `b`, `c`, `d`, `e`, `h`, and `l`.
 
 #### Flags
-There's also a special `f` register that saves the state of the processor flags. As the processor performs certain operations it can set or reset some of these flags, which will be very useful to us as we program. For example, one of the bits in this register is the Zero flag, which tells us if the result of the previous operation was a zero or not. Not all of the operations modify the flags, but many do. To understandin depth all the operations that the GBz80 can perform, you can take a look at the related section in the Pan Docs: http://gbdev.gg8.se/wiki/articles/CPU_Instruction_Set.
+There's also a special `f` register that saves the state of the processor flags. As the processor performs certain operations it can set or reset some of these flags, which will be very useful to us as we program. For example, one of the bits in this register is the Zero flag, which tells us if the result of the previous operation was a zero or not. Not all of the operations modify the flags, but many do. To understand in depth all the operations that the GBz80 can perform, you can take a look at the related section in the Pan Docs: http://gbdev.gg8.se/wiki/articles/CPU_Instruction_Set.
 
 The `f` register's flags are as follows:
 ```
@@ -291,3 +291,50 @@ An explanatory table and then we'll go over it in more detail:
            2: During Searching OAM
            3: During Transferring Data to LCD Driver
 ```
+
+Bytes 3-5 let us activate the LCD Interrupts. They're very useful for certain processes that require fast redraws on the screen because when we write our code for drawing on them, we can be sure that the images will be shown correctly (especially during interval periods).
+
+Byte 2 is used for comparing two special registers: `LY` ($FF44), which is the Y coordinate where the LCD is drawing at the time, and `LCY` ($FF45), which we can define ourselves.
+
+Bytes 1 and 0 tell us what mode the LCD is in, be it one of the two interval periods, accessing RAM, or writing to the LCD. As we said before, this is very useful for knowing if, for example, we're in VBlank; we'd only need to see if in bits 1 and 0 we have '01'. In assembly, this is as easy as the following:
+
+```asm
+ld	a, [$FF41]
+and	1
+cp	1
+```
+
+In other words, load `a` with the value in the LCD status register ($FF41), and perform a boolean `AND` operation comparing `a` with 1. Regardless of the value in the register, if the last two bits were '01', then the result will be '01'. So we then compare it with 1 (`cp 1`) and if the result of the comparison is 0, then we know they do equal '01' and we're in VBlank.
+
+There is, however, another faster way of knowing if we're in VBlank, and it's using the `LY` register like before. Like I said, the `LY` register tells us what horizontal line is being drawn to the LCD. After line 144 it's off screen, so we're in VBlank. So we do this:
+
+```asm
+ld	a, [$FF44]
+cp	145
+```
+
+We load `a` with the value of the `LY` register and compare it with 145, if they're the same, we've just entered VBlank. As you can see, one instruction less, which, in assembly, is very important.
+
+So for example, so you can see a bit of Game Boy assembly, if we want to wait until we're in VBlank (so we can activate or deactive the LCD for example, like we saw before), we could do something like this:
+
+```asm
+espera_vblank:
+	ld	a, [$FF44]
+	cp	145
+	jr	nz, .espera_vblank
+```
+
+Just like before, but after the comparison, if the result isn't 0 (and the LCD isn't on line 145), we jump to the starting label and make the comparison again. This loop will execute until the LCD reaches line 145, after which it will move on to the instructions that follow it. Don't worry about assembly, it'll be explained later on.
+
+##### $FF42 - SCY - Scroll Y (R/W), $FF43 - SCX - Scroll X (R/W)
+These registers control the display scroll. Like I explained before, we can move the visible window around the background map by writing to them. To position the visible area on the coordinate (0,0) of the background, we just write 0 in both registers.
+
+##### $FF4A - WY - Y Position of the Window (R/W), $FF4B - WX - X Position of the Window minus 7 (R/W)
+These registers control the (x,y) position of the window. the window is an alternative background, that can be drawn on top of the normal background, for effects like the status screen in Zelda. This window has no scroll, but it can be set to whatever position by moving it with these registers. If we place it on `WY`=0, `WX`=7, the window will conver the entire visible background. Sprites go on top of the window.
+
+#### Backgrounds
+So we have an area in VRAM, known as the "Background Tile Map" with 32 x 32 = 1024 bytes. Each one of these bytes has a number that references which tile from the "Tile Data Table" to display. In reality we have two background maps, one in $9800-9BFF and the other in $9C00-9FFF. We can select one or the other with the `LCDC` register ($FF40).
+
+Furthermore, we have a window that floats on top of the background, controlled by the `WX` and `WY` registers.
+
+we also have two Tile Data Tables, one that goes from $8000-$8FFF unsigned (0-255)
