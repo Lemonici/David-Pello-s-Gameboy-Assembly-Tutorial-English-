@@ -411,3 +411,24 @@ Specifies the special attributes that can be applied to a sprite. Each bit of th
 As we can see here, some of the bits only apply to the Game Boy Color, so we'll ignore them for now and focus on priority, mirroring and palette.
 
 # Tools
+#### Assembler
+To program in Game Boy assembly what's the first thing we need? An assembler, obviously. It's the program that converts our code written in assembly to Game Boy machine code in the form of a ROM that we can run in our favorite emulator or load directly into our Game Boy with a flash cart.
+
+Personally, I use RGBDS, a development system specifically for Game Boy assembly, so it makes everything super simple. Download links below. 
+
+**Windows**: There are Windows builds [here.](https://github.com/rednex/rgbds/releases)
+
+You download it and copy the .exe files to c:\windows or something similar in the PATH.
+
+**Linux**: For a while now RGBDS for Unix has been home has been on [GitHub.](https://github.com/bentley/rgbds)
+
+In Linux you may need to compile it (Arch has a package in the AUR, for example), but don't worry. All it is is executing a `make install` command as root in the directory after downloading it with git. GitHub has installation instructions.
+
+RGBDS documentation can be found [here.](https://rednex.github.io/rgbds/)
+
+So RGBDS comes with four tools, `rgbasm`, the assembler itself, `rgblink`, the linker that will create our ROMs, `rgblib`, to create libraries, and `rgbfix`, to modify the ROM header so it meets the necessary requirements for the ROM to run. Like we saw in the introduction, the Game Boy header has a few checksums and the like, and this tool adjusts them so the ROM is correct
+
+We'll also need some files that will make assembling our ROMs easier. Download links below.
+[I don't recommend using these files for larger projects, makefiles tend to be more robust and can compile larger projects faster, you'll also better understand what's going on]
+
+**Windows**: http://wiki.ladecadence.net/lib/exe/fetch.php?media=assemble.bat
